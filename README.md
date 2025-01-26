@@ -4,9 +4,20 @@ This project implment a neural network that recognizes hand-written digits
 
 ### Build
 
-the executable can be built using the following command:
+The executable can be built using the following command:
 
 ```sh
 cmake -B build -S .
 cmake --build build
+```
+
+### Testing
+
+Execute the following commands to test components of the project
+
+> The project must be built before testing
+
+```sh
+cd build
+ctest
 ```
