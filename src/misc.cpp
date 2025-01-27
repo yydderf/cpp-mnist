@@ -1,4 +1,5 @@
 #include <vector>
+#include <iostream>
 #include <fstream>
 #include <armadillo>
 
@@ -29,16 +30,12 @@ inline uint32_t swap_endian(uint32_t i)
             ((i & 0xFF) << 24));
 }
 
-void load_mnist(std::vector<arma::Mat<uint8_t>> &images, std::vector<uint8_t> &labels, const char *image_filename, const char *label_filename)
+DataHandler::DataHandler(std::vector<arma::Mat<uint8_t>> &images, std::vector<uint8_t> &labels, const char *image_filename, const char *label_filename)
 {
     std::ifstream image_fd(image_filename, std::ios::in | std::ios::binary);
     std::ifstream label_fd(label_filename, std::ios::in | std::ios::binary);
 
     uint32_t magic;
-    uint32_t num_images;
-    uint32_t num_labels;
-    uint32_t rows, cols;
-    uint32_t image_size;
 
     image_fd.read(reinterpret_cast<char *>(&magic), 4);
     if (swap_endian(magic) != 0x00000803) {
@@ -52,33 +49,47 @@ void load_mnist(std::vector<arma::Mat<uint8_t>> &images, std::vector<uint8_t> &l
         std::exit(1);
     }
 
-    image_fd.read(reinterpret_cast<char *>(&num_images), 4);
-    num_images = swap_endian(num_images);
+    image_fd.read(reinterpret_cast<char *>(&(this->num_images)), 4);
+    this->num_images = swap_endian(this->num_images);
 
-    label_fd.read(reinterpret_cast<char *>(&num_labels), 4);
-    num_labels = swap_endian(num_labels);
+    label_fd.read(reinterpret_cast<char *>(&(this->num_labels)), 4);
+    this->num_labels = swap_endian(this->num_labels);
 
-    if (num_images != num_labels) {
+    if (this->num_images != this->num_labels) {
         std::cerr << "[!] Number of images and labels are not matched." << std::endl;
     }
 
-    image_fd.read(reinterpret_cast<char *>(&rows), 4);
-    image_fd.read(reinterpret_cast<char *>(&cols), 4);
+    image_fd.read(reinterpret_cast<char *>(&(this->rows)), 4);
+    image_fd.read(reinterpret_cast<char *>(&(this->cols)), 4);
 
-    rows = swap_endian(rows);
-    cols = swap_endian(cols);
+    this->rows = swap_endian(this->rows);
+    this->cols = swap_endian(this->cols);
 
-    image_size = rows * cols;
+    image_size = this->rows * this->cols;
 
-    images.resize(num_images);
-    labels.resize(num_labels);
+    images.resize(this->num_images);
+    labels.resize(this->num_labels);
 
-    for (int i = 0; i < num_images; ++i) {
-        images[i].set_size(image_size, 1);
-        image_fd.read(reinterpret_cast<char *>(images[i].memptr()), image_size);
+    for (int i = 0; i < this->num_images; ++i) {
+        images[i].set_size(this->image_size, 1);
+        image_fd.read(reinterpret_cast<char *>(images[i].memptr()), this->image_size);
     }
 
-    for (int i = 0; i < num_labels; ++i) {
+    for (int i = 0; i < this->num_labels; ++i) {
         label_fd.read(reinterpret_cast<char *>(&(labels[i])), 1);
     }
+
+    image_fd.close();
+    label_fd.close();
+}
+
+void DataHandler::display_mnist(const arma::Mat<uint8_t> &image)
+{
+    for (int i = 0; i < this->image_size; ++i) {
+        if (i % this->rows == 0) {
+            std::cout << std::endl;
+        }
+        std::cout << ((image[i] > 127) ? '#' : ' ');
+    }
+    std::cout << std::endl;
 }

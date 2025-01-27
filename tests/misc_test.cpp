@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <armadillo>
 
 #include "../src/misc.hpp"
 
@@ -24,4 +25,16 @@ TEST(SigmoidPrimeTest, BasicAssertions)
 
     EXPECT_NEAR(sigmoid_prime(1), sigmoid_prime(-1), 0.000001);
     EXPECT_NEAR(sigmoid_prime(10), sigmoid_prime(-10), 0.0000001);
+}
+
+TEST(LoadMNIST, BasicAssertions)
+{
+    std::vector<arma::Mat<uint8_t>> images;
+    std::vector<uint8_t> labels;
+    DataHandler dh(
+        images,
+        labels,
+        "../res/dataset/t10k-images.idx3-ubyte",
+        "../res/dataset/t10k-labels.idx1-ubyte"
+    );
 }

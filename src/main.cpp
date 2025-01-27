@@ -62,11 +62,13 @@ int main()
     // std::cout << A * B.t() << std::endl;
     std::vector<arma::Mat<uint8_t>> images;
     std::vector<uint8_t> labels;
-    load_mnist(
+    DataHandler dh(
         images,
-        labels,
+        labels, 
         "../res/dataset/t10k-images.idx3-ubyte",
         "../res/dataset/t10k-labels.idx1-ubyte"
     );
+    dh.display_mnist(images[0]);
+    std::cout << static_cast<char>(labels[0] + '0') << std::endl;
     return 0;
 }
