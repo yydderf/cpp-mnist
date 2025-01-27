@@ -1,15 +1,9 @@
 #pragma once
 
 #include <cmath>
+#include <vector>
+#include <armadillo>
 
-double sigmoid(double z)
-{
-    // double z = std::static_cast<double>(_z);
-    return 1.0 / (1.0 + std::exp(-z));
-}
-
-double sigmoid_prime(double z)
-{
-    // double z = std::static_cast<double>(_z);
-    return sigmoid(z) * (1 - sigmoid(z));
-}
+double sigmoid(double z);
+double sigmoid_prime(double z);
+void load_mnist(std::vector<arma::Mat<uint8_t>> &images, std::vector<uint8_t> &labels, const char *image_filename, const char *label_filename);

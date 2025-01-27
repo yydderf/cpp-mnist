@@ -18,6 +18,7 @@ find_package(Armadillo REQUIRED)
 include_directories(${ARMADILLO_INCLUDE_DIRS})
 add_executable(main 
     src/main.cpp
+    src/misc.cpp
 )
 target_link_libraries(main ${ARMADILLO_LIBRARIES})
 
@@ -26,6 +27,7 @@ enable_testing()
 add_executable(
     misc_test
     tests/misc_test.cpp
+    src/misc.cpp
 )
 
 target_link_libraries(

@@ -54,11 +54,19 @@ private:
 
 int main()
 {
-    std::vector<int> sizes = {2, 3, 1};
-    Network network(sizes);
-    arma::mat A(4, 5, arma::fill::randu);
-    arma::mat B(4, 5, arma::fill::randu);
+    // std::vector<int> sizes = {2, 3, 1};
+    // Network network(sizes);
+    // arma::mat A(4, 5, arma::fill::randu);
+    // arma::mat B(4, 5, arma::fill::randu);
 
-    std::cout << A * B.t() << std::endl;
+    // std::cout << A * B.t() << std::endl;
+    std::vector<arma::Mat<uint8_t>> images;
+    std::vector<uint8_t> labels;
+    load_mnist(
+        images,
+        labels,
+        "../res/dataset/t10k-images.idx3-ubyte",
+        "../res/dataset/t10k-labels.idx1-ubyte"
+    );
     return 0;
 }
