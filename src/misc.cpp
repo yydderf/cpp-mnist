@@ -97,6 +97,10 @@ DataHandler::DataHandler(std::vector<Data> &data, const char *image_filename, co
     label_fd.close();
 }
 
+/**
+ * Display the image to the terminal
+ * @param image The matrix storing the data of an image
+ */
 void DataHandler::display_mnist(const arma::Mat<double> &image)
 {
     for (int i = 0; i < this->image_size; ++i) {
@@ -108,6 +112,13 @@ void DataHandler::display_mnist(const arma::Mat<double> &image)
     std::cout << std::endl;
 }
 
+/**
+ * Split the dataset into training and testing based on the given ratio
+ * @param data The entire dataset
+ * @param ratio The ratio for training data
+ * @param training_data A lightweight reference the training data
+ * @param testing_data A lightweight reference the testing data
+ */
 void DataHandler::split(std::vector<Data> &data, double ratio, std::span<Data> &training_data, std::span<Data> &testing_data)
 {
     uint32_t training_size = std::lround(this->num_images * ratio);
