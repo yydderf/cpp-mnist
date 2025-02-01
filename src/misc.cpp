@@ -30,7 +30,8 @@ inline uint32_t swap_endian(uint32_t i)
             ((i & 0xFF) << 24));
 }
 
-DataHandler::DataHandler(std::vector<arma::Mat<uint8_t>> &images, std::vector<uint8_t> &labels, const char *image_filename, const char *label_filename)
+// DataHandler::DataHandler(std::vector<arma::Mat<uint8_t>> &images, std::vector<arma::Mat<uint8_t>> &labels, const char *image_filename, const char *label_filename)
+DataHandler::DataHandler(std::vector<Data> &data, const char *image_filename, const char *label_filename)
 {
     std::ifstream image_fd(image_filename, std::ios::in | std::ios::binary);
     std::ifstream label_fd(label_filename, std::ios::in | std::ios::binary);
@@ -57,6 +58,7 @@ DataHandler::DataHandler(std::vector<arma::Mat<uint8_t>> &images, std::vector<ui
 
     if (this->num_images != this->num_labels) {
         std::cerr << "[!] Number of images and labels are not matched." << std::endl;
+        std::cerr << "\tImage: " << this->num_images << ", Labels: " << this->num_labels << std::endl;
     }
 
     image_fd.read(reinterpret_cast<char *>(&(this->rows)), 4);
@@ -67,23 +69,32 @@ DataHandler::DataHandler(std::vector<arma::Mat<uint8_t>> &images, std::vector<ui
 
     image_size = this->rows * this->cols;
 
-    images.resize(this->num_images);
-    labels.resize(this->num_labels);
+    data.resize(this->num_images);
+
+    uint8_t *tmp_image = new uint8_t[this->image_size];
+    // arma::Mat<uint8_t> tmp_image(this->image_size, 1);
+    uint8_t tmp_label;
 
     for (int i = 0; i < this->num_images; ++i) {
-        images[i].set_size(this->image_size, 1);
-        image_fd.read(reinterpret_cast<char *>(images[i].memptr()), this->image_size);
+        data[i].image.set_size(this->image_size, 1);
+        data[i].label.zeros(10, 1);
+
+        // image_fd.read(reinterpret_cast<char *>(data[i].image.memptr()), this->image_size);
+        image_fd.read(reinterpret_cast<char *>(tmp_image), this->image_size);
+        label_fd.read(reinterpret_cast<char *>(&(tmp_label)), 1);
+
+        for (int j = 0; j < this->image_size; ++j) {
+            data[i].image(j, 0) = static_cast<double>(tmp_image[j]);
+        }
+        data[i].label(tmp_label, 0) = 1.0;
     }
 
-    for (int i = 0; i < this->num_labels; ++i) {
-        label_fd.read(reinterpret_cast<char *>(&(labels[i])), 1);
-    }
-
+    delete[] tmp_image;
     image_fd.close();
     label_fd.close();
 }
 
-void DataHandler::display_mnist(const arma::Mat<uint8_t> &image)
+void DataHandler::display_mnist(const arma::Mat<double> &image)
 {
     for (int i = 0; i < this->image_size; ++i) {
         if (i % this->rows == 0) {

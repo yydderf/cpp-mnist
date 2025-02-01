@@ -7,10 +7,15 @@
 double sigmoid(double z);
 double sigmoid_prime(double z);
 
+struct Data {
+    arma::Mat<double> image;
+    arma::Mat<double> label;
+};
+
 class DataHandler {
 public:
-    DataHandler(std::vector<arma::Mat<uint8_t>> &images, std::vector<uint8_t> &labels, const char *image_filename, const char *label_filename);
-    void display_mnist(const arma::Mat<uint8_t> &image);
+    DataHandler(std::vector<Data> &data, const char *image_filename, const char *label_filename);
+    void display_mnist(const arma::Mat<double> &image);
     uint32_t num_images;
     uint32_t num_labels;
     uint32_t rows, cols;

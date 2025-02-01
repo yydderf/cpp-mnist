@@ -29,11 +29,9 @@ TEST(SigmoidPrimeTest, BasicAssertions)
 
 TEST(LoadMNIST, BasicAssertions)
 {
-    std::vector<arma::Mat<uint8_t>> images;
-    std::vector<uint8_t> labels;
+    std::vector<Data> data;
     DataHandler dh(
-        images,
-        labels,
+        data,
         "../res/dataset/t10k-images.idx3-ubyte",
         "../res/dataset/t10k-labels.idx1-ubyte"
     );
