@@ -2,6 +2,9 @@
 #include <iostream>
 #include <fstream>
 #include <armadillo>
+#include <cmath>
+#include <algorithm>
+#include <random>
 
 #include "misc.hpp"
 
@@ -103,4 +106,17 @@ void DataHandler::display_mnist(const arma::Mat<double> &image)
         std::cout << ((image[i] > 127) ? '#' : ' ');
     }
     std::cout << std::endl;
+}
+
+void DataHandler::split(std::vector<Data> &data, double ratio, std::span<Data> &training_data, std::span<Data> &testing_data)
+{
+    uint32_t training_size = std::lround(this->num_images * ratio);
+    uint32_t testing_size = this->num_images - training_size;
+
+    std::random_device rd;
+    std::mt19937 generator(rd());
+    std::shuffle(data.begin(), data.end(), generator);
+    std::span<Data> s(data);
+    training_data = s.subspan(0, training_size);
+    testing_data = s.subspan(training_size);
 }

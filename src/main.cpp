@@ -94,12 +94,17 @@ int main()
 
     // std::cout << A * B.t() << std::endl;
     std::vector<Data> data;
+    std::span<Data> training_data, testing_data;
     DataHandler dh(
         data,
-        "../res/dataset/t10k-images.idx3-ubyte",
-        "../res/dataset/t10k-labels.idx1-ubyte"
+        "../res/dataset/train-images.idx3-ubyte",
+        "../res/dataset/train-labels.idx1-ubyte"
     );
-    dh.display_mnist(data[0].image);
+    // dh.display_mnist(data[0].image);
+    dh.split(data, 0.85, training_data, testing_data);
+    // std::cout << training_data.size() << ' ' << testing_data.size() << std::endl;
+    dh.display_mnist(training_data[0].image);
+    dh.display_mnist(testing_data[0].image);
 
     // set the number of hidden layer neurons to be 30
     // std::vector<uint32_t> sizes = {dh.image_size, 30, 10};
