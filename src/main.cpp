@@ -34,6 +34,11 @@ Network(std::vector<uint32_t> sizes)
      */
     arma::Mat<double> feedforward(arma::Mat<double> a)
     {
+        arma::Mat<double> z;
+        for (int i = 0; i < this->num_layers - 1; ++i) {
+            z = this->weights[i] * a + this->biases[i];
+            a = z.for_each( [](arma::mat::elem_type &val) { return sigmoid(val); } );
+        }
         return a;
     }
 
@@ -57,14 +62,22 @@ Network(std::vector<uint32_t> sizes)
         // w_k -> w'_k = w_k - eta * 1/m * sum(partial nabla C / partial w_k)
         // b_l -> b'_l = b_l - eta * 1/m * sum(partial nabla C / partial b_l)
         // the latter part is derived using backprop
-        // for (Data data : mini_batch) {
-        // }
-        // this->nabla_b.zeros();
-        // this->nabla_w.zeros();
-        // for (Data data : mini_batch) {
-        // }
-        // this->weights;
-        // this->biases;
+        size_t m = mini_batch.size();
+        for (int i = 0; i < this->num_layers - 1; ++i) {
+            this->nabla_b[i].zeros();
+            this->nabla_w[i].zeros();
+        }
+        for (Data data : mini_batch) {
+            this->backprop(data);
+            for (int i = 0; i < this->num_layers - 1; ++i) {
+                this->nabla_b[i] += this->delta_nabla_b[i];
+                this->nabla_w[i] += this->delta_nabla_w[i];
+            }
+        }
+        for (int i = 0; i < this->num_layers - 1; ++i) {
+            this->weights[i] -= (eta / m) * this->nabla_w[i];
+            this->biases[i] -= (eta / m) * this->nabla_b[i];
+        }
     }
 
     /**
@@ -156,7 +169,6 @@ int main()
     // set the number of hidden layer neurons to be 30
     std::vector<uint32_t> sizes = {dh.image_size, 30, 10};
     Network network(sizes);
-    network.backprop(training_data[0]);
     // network.SGD(training_data, 30, 10, 3.0, test_data)
     
     return 0;
