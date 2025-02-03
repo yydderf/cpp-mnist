@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <armadillo>
+#include <cmath>
 
 #include "misc.hpp"
 
@@ -45,8 +46,27 @@ Network(std::vector<uint32_t> sizes)
     /**
      * Stochastic Gradient Descent - the learning algorithm
      */
-    void SGD(const std::vector<arma::Mat<uint8_t>> &training_data, uint32_t epochs, uint32_t mini_batch_size, double eta, const std::vector<arma::Mat<uint8_t>> &test_data)
+    void SGD(std::span<Data> &training_data, size_t epochs, size_t mini_batch_size, double eta, std::span<Data> &testing_data)
     {
+        size_t training_size = training_data.size();
+        size_t testing_size = testing_data.size();
+        size_t batch_number = std::ceil(static_cast<double>(training_size) / mini_batch_size);
+
+        std::random_device rd;
+        std::mt19937 generator(rd());
+
+        for (size_t i = 0; i < epochs; ++i) {
+            std::shuffle(training_data.begin(), training_data.end(), generator);
+            std::cout << "Epoch " << i << ": " << std::flush;
+            for (size_t j = 0; j < batch_number; ++j) {
+                if (j % 100 == 0) {
+                    std::cout << '.' << std::flush;
+                }
+                std::span<Data> mini_batch = training_data.subspan(mini_batch_size * j, mini_batch_size * (j + 1) <= training_size ? mini_batch_size : training_size - mini_batch_size * j);
+                this->update_mini_batch(mini_batch, eta);
+            }
+            std::cout << "\rEpoch " << i << ": " << this->evaluate(testing_data) << " / " << testing_size << std::endl;
+        }
     }
 
     /**
@@ -57,7 +77,7 @@ Network(std::vector<uint32_t> sizes)
     void update_mini_batch(const std::span<Data> &mini_batch, double eta)
     {
         // calculate nabla_w and nabla_b
-        // update self.weights and self.biases
+    // update self.weights and self.biases
         // size of mini_batch is m
         // w_k -> w'_k = w_k - eta * 1/m * sum(partial nabla C / partial w_k)
         // b_l -> b'_l = b_l - eta * 1/m * sum(partial nabla C / partial b_l)
@@ -104,7 +124,7 @@ Network(std::vector<uint32_t> sizes)
         for (int i = 0; i < this->num_layers - 1; ++i) {
             z = this->weights[i] * activation + this->biases[i];
             zs[i] = z;
-            z.for_each( [](arma::mat::elem_type &val) {return sigmoid(val); } );
+            z.for_each( [](arma::mat::elem_type &val) { return sigmoid(val); } );
             activation = z;
             activations[i + 1] = activation;
         }
@@ -125,10 +145,18 @@ Network(std::vector<uint32_t> sizes)
             this->delta_nabla_b.end()[-i] = delta;
             this->delta_nabla_w.end()[-i] = delta * activations.end()[-i - 1].t();
         }
+        std::cout << this->delta_nabla_b.end()[-1] << std::endl;
     }
 
-    void evaluate()
+    size_t evaluate(std::span<Data> &testing_data)
     {
+        size_t valid = 0;
+        for (Data data : testing_data) {
+            if (this->feedforward(data.image).index_max() == data.label.index_max()) {
+                valid += 1;
+            }
+        }
+        return valid;
     }
 
     /**
@@ -163,13 +191,13 @@ int main()
         "../res/dataset/train-labels.idx1-ubyte"
     );
     dh.split(data, 0.85, training_data, testing_data);
-    dh.display_mnist(training_data[0].image);
-    dh.display_mnist(testing_data[0].image);
+    // dh.display_mnist(training_data[0].image);
+    // dh.display_mnist(testing_data[0].image);
 
     // set the number of hidden layer neurons to be 30
     std::vector<uint32_t> sizes = {dh.image_size, 30, 10};
     Network network(sizes);
-    // network.SGD(training_data, 30, 10, 3.0, test_data)
+    network.SGD(training_data, 30, 10, 3.0, testing_data);
     
     return 0;
 }
