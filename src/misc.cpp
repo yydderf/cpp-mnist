@@ -87,7 +87,7 @@ DataHandler::DataHandler(std::vector<Data> &data, const char *image_filename, co
         label_fd.read(reinterpret_cast<char *>(&(tmp_label)), 1);
 
         for (int j = 0; j < this->image_size; ++j) {
-            data[i].image(j, 0) = static_cast<double>(tmp_image[j]);
+            data[i].image(j, 0) = static_cast<double>(tmp_image[j]) / 255;
         }
         data[i].label(tmp_label, 0) = 1.0;
     }
