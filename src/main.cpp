@@ -51,7 +51,6 @@ Network(std::vector<uint32_t> sizes)
         size_t training_size = training_data.size();
         size_t testing_size = testing_data.size();
         size_t batch_number = std::ceil(static_cast<double>(training_size) / mini_batch_size);
-        this->prev_eval.resize(testing_size);
         std::pair<size_t, size_t> eval_out;
 
         std::random_device rd;
@@ -65,8 +64,7 @@ Network(std::vector<uint32_t> sizes)
                 std::span<Data> mini_batch = training_data.subspan(mini_batch_size * j, mini_batch_size * (j + 1) <= training_size ? mini_batch_size : training_size - mini_batch_size * j);
                 this->update_mini_batch(mini_batch, eta);
             }
-            eval_out = this->evaluate(testing_data);
-            std::cout << "\rEpoch " << i << ": " << eval_out.first << " / " << testing_size << " [" << eval_out.second << ']' << std::endl;
+            std::cout << "\rEpoch " << i << ": " << this->evaluate(testing_data) << " / " << testing_size << std::endl;
         }
     }
 
@@ -100,6 +98,9 @@ Network(std::vector<uint32_t> sizes)
         for (int i = 0; i < this->num_layers - 1; ++i) {
             this->weights[i] -= (eta / m) * this->nabla_w[i];
             this->biases[i] -= (eta / m) * this->nabla_b[i];
+            // if (this->epoch_counter == m) {
+            //     std::cout << arma::mean(arma::mean(this->nabla_w[i])) << '\t' << arma::mean(arma::mean(this->nabla_b[i])) << std::endl;
+            // }
         }
     }
 
@@ -150,25 +151,18 @@ Network(std::vector<uint32_t> sizes)
         }
     }
 
-    std::pair<size_t, size_t> evaluate(std::span<Data> &testing_data)
+    size_t evaluate(std::span<Data> &testing_data)
     {
         size_t valid = 0;
-        size_t diff = 0;
         size_t n = testing_data.size();
         arma::Mat<double> out_mat;
-        arma::uword out_ind;
-        for (size_t i = 0; i < n; ++i) {
-            out_mat = this->feedforward(testing_data[i].image);
-            out_ind = out_mat.index_max();
-            if (out_ind == testing_data[i].label.index_max()) {
+        for (Data data : testing_data) {
+            out_mat = this->feedforward(data.image);
+            if (out_mat.index_max() == data.label.index_max()) {
                 valid += 1;
             }
-            if (out_ind != this->prev_eval[i]) {
-                diff += 1;
-            }
-            this->prev_eval[i] = out_ind;
         }
-        return {valid, diff};
+        return valid;
     }
 
     /**
@@ -185,7 +179,6 @@ Network(std::vector<uint32_t> sizes)
 private:
     int num_layers;
     size_t epoch_counter;
-    std::vector<arma::uword> prev_eval;
     std::vector<uint32_t> sizes;
     std::vector<arma::Mat<double>> biases;
     std::vector<arma::Mat<double>> weights;
@@ -197,6 +190,12 @@ private:
 
 int main()
 {
+    arma::arma_config arma_cfg;
+    if (arma_cfg.blas) {
+        std::cout << "BLAS is Enabled" << std::endl;
+    } else {
+        std::cout << "BLAS is not enabled" << std::endl;
+    }
     std::vector<Data> data;
     std::span<Data> training_data, testing_data;
     DataHandler dh(
@@ -211,7 +210,6 @@ int main()
     // set the number of hidden layer neurons to be 30
     std::vector<uint32_t> sizes = {dh.image_size, 30, 10};
     Network network(sizes);
-    // network.SGD(training_data, 30, 10, 3.0, testing_data);
     network.SGD(training_data, 30, 10, 3.0, testing_data);
     
     return 0;
