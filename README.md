@@ -8,7 +8,7 @@ The executable can be built using the following command:
 
 ```sh
 cmake -B build -S .
-cmake --build build
+cmake --build build -j$(nproc)
 ```
 
 ### Testing
