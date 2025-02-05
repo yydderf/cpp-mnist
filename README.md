@@ -2,13 +2,22 @@
 
 This project implment a neural network that recognizes hand-written digits
 
-### Build
+### Building
 
 The executable can be built using the following command:
 
 ```sh
 cmake -B build -S .
 cmake --build build -j$(nproc)
+```
+
+### Quick Start
+
+> be sure to download and unzip the dataset before starting.
+
+```sh
+mkdir -p res/dataset/
+mv <mnist-dataset> res/dataset/
 ```
 
 ### Testing

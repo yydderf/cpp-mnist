@@ -15,6 +15,7 @@ set(DEPS_PREFIX ${CMAKE_BINARY_DIR}/_deps)
 set(DEPS_INSTALL_PREFIX ${DEPS_PREFIX}/install)
 
 list(APPEND CMAKE_PREFIX_PATH "${DEPS_INSTALL_PREFIX}")
+list(APPEND CMAKE_INSTALL_RPATH "${DEPS_INSTALL_PREFIX}/lib")
 
 include(ExternalProject)
 
@@ -33,7 +34,7 @@ if (NOT OpenBLAS_FOUND)
             -DCMAKE_INSTALL_PREFIX=${DEPS_INSTALL_PREFIX}
             -DBUILD_SHARED_LIBS=ON
     )
-    set(OpenBLAS_LIBRARIES "${DEPS_INSTALL_PREFIX}/lib/libopenblas.so")
+    set(OpenBLAS_LIBRARIES "${DEPS_INSTALL_PREFIX}/lib/libopenblas${CMAKE_SHARED_LIBRARY_SUFFIX}")
     set(OpenBLAS_INCLUDE_DIRS "${DEPS_INSTALL_PREFIX}/include")
     set(OpenBLAS_FOUND TRUE)
 else()
@@ -51,7 +52,7 @@ function(build_armadillo)
             -DCMAKE_INSTALL_PREFIX=${DEPS_INSTALL_PREFIX}
         DEPENDS OpenBLAS
     )
-    set(ARMADILLO_LIBRARIES "${DEPS_INSTALL_PREFIX}/lib/libarmadillo.so" PARENT_SCOPE)
+    set(ARMADILLO_LIBRARIES "${DEPS_INSTALL_PREFIX}/lib/libarmadillo${CMAKE_SHARED_LIBRARY_SUFFIX}" PARENT_SCOPE)
     set(ARMADILLO_INCLUDE_DIRS "${DEPS_INSTALL_PREFIX}/include" PARENT_SCOPE)
     set(ARMADILLO_FOUND TRUE PARENT_SCOPE)
 endfunction()
@@ -106,9 +107,14 @@ add_executable(misc_test
     tests/misc_test.cpp
     src/misc.cpp
 )
-
+add_dependencies(misc_test
+    Armadillo
+)
 target_link_libraries(misc_test
     GTest::gtest_main
+)
+target_include_directories(misc_test
+    PRIVATE ${ARMADILLO_INCLUDE_DIRS}
 )
 
 include(GoogleTest)
