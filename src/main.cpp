@@ -193,7 +193,11 @@ int main()
 {
     arma::arma_config arma_cfg;
     std::cout << (arma_cfg.blas ? "BLAS is Enabled" : "BLAS is NOT Enabled") << std::endl;
+    // cblas.h in accelerate framework does not provide an API to get the thread number
+    // OPENBLAS_API is definied using add_definitions(-DOPENBLAS_API)
+#ifdef OPENBLAS_API
     std::cout << "OpenBLAS procs: " << openblas_get_num_procs() << ", threads: " << openblas_get_num_threads() << std::endl;
+#endif
 
     std::vector<Data> data;
     std::span<Data> training_data, testing_data;

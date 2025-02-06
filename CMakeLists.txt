@@ -20,17 +20,18 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(DEPS_PREFIX ${CMAKE_BINARY_DIR}/_deps)
 set(DEPS_INSTALL_PREFIX ${DEPS_PREFIX}/install)
-
 list(APPEND CMAKE_PREFIX_PATH "${DEPS_INSTALL_PREFIX}")
-list(APPEND CMAKE_INSTALL_RPATH "${DEPS_INSTALL_PREFIX}/lib")
+
+list(APPEND CMAKE_BUILD_RPATH "${DEPS_INSTALL_PREFIX}/lib")
 
 include(ExternalProject)
 
-find_package(BLAS QUIET)
+include(FindBLAS)
+include(FindOpenMP)
 find_package(Armadillo QUIET)
 
-if (NOT OpenBLAS_FOUND)
-    message(STATUS "${Yellow}OpenBLAS not found, fetch and build later${ColorReset}")
+if (NOT BLAS_FOUND)
+    message(STATUS "${Yellow}BLAS not found, fetch and build later${ColorReset}")
     ExternalProject_Add(
         OpenBLAS
         GIT_REPOSITORY  https://github.com/OpenMathLib/OpenBLAS.git
@@ -42,13 +43,18 @@ if (NOT OpenBLAS_FOUND)
             -DBUILD_SHARED_LIBS=ON
             -DBUILD_WITHOUT_LAPACK=ON
             -DCMAKE_BUILD_TYPE=Release
-            -DUSE_OPENMP=ON
+            -DUSE_OPENMP=${OPENMP_FOUND}
     )
-    set(OpenBLAS_LIBRARIES "${DEPS_INSTALL_PREFIX}/lib/libopenblas${CMAKE_SHARED_LIBRARY_SUFFIX}")
-    set(OpenBLAS_INCLUDE_DIRS "${DEPS_INSTALL_PREFIX}/include/openblas")
-    set(OpenBLAS_FOUND TRUE)
+    set(BLAS_LIBRARIES "${DEPS_INSTALL_PREFIX}/lib/libopenblas${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    set(BLAS_INCLUDE_DIRS "${DEPS_INSTALL_PREFIX}/include/openblas")
+    set(BLAS_FOUND TRUE)
+    add_definitions(-DOPENBLAS_API)
 else()
-    message(STATUS "${Green}Found OpenBLAS: ${OpenBLAS_LIBRARIES}${ColorReset}")
+    find_path(BLAS_INCLUDE_DIRS cblas.h
+        /usr/include
+        /usr/local/include
+        ${BLAS_LIBRARIES}
+    )
 endif()
 
 function(build_armadillo)
@@ -63,7 +69,7 @@ function(build_armadillo)
             -DCMAKE_BUILD_TYPE=Release
             -DBUILD_SMOKE_TEST=OFF
 
-        DEPENDS OpenBLAS
+        DEPENDS BLAS::BLAS
     )
     set(ARMADILLO_LIBRARIES "${DEPS_INSTALL_PREFIX}/lib/libarmadillo${CMAKE_SHARED_LIBRARY_SUFFIX}" PARENT_SCOPE)
     set(ARMADILLO_INCLUDE_DIRS "${DEPS_INSTALL_PREFIX}/include" PARENT_SCOPE)
@@ -81,10 +87,10 @@ else()
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     if (NOT ARMADILLO_LINKS MATCHES "libopenblas")
-        message(STATUS "${Yellow}Armadillo does not link to OpenBLAS, rebuilding armadillo later${ColorReset}")
+        message(STATUS "${Yellow}Armadillo does not link to BLAS, rebuilding armadillo later${ColorReset}")
         build_armadillo()
     else()
-        message(STATUS "${Green}Armadillo is correctly linked to OpenBLAS${ColorReset}")
+        message(STATUS "${Green}Armadillo is correctly linked to BLAS${ColorReset}")
     endif()
 endif()
 
@@ -97,11 +103,11 @@ add_dependencies(main
 )
 target_include_directories(main
     PRIVATE ${ARMADILLO_INCLUDE_DIRS}
-    PRIVATE ${OpenBLAS_INCLUDE_DIRS}
+    PRIVATE ${BLAS_INCLUDE_DIRS}
 )
 target_link_libraries(main
-    ${ARMADILLO_LIBRARIES}
-    ${OpenBLAS_LIBRARIES}
+    PRIVATE ${ARMADILLO_LIBRARIES}
+    PRIVATE ${BLAS_LIBRARIES}
 )
 
 include(FetchContent)
