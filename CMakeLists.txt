@@ -11,6 +11,13 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 set(DEPS_PREFIX ${CMAKE_BINARY_DIR}/_deps)
 set(DEPS_INSTALL_PREFIX ${DEPS_PREFIX}/install)
 
@@ -33,9 +40,12 @@ if (NOT OpenBLAS_FOUND)
         CMAKE_ARGS
             -DCMAKE_INSTALL_PREFIX=${DEPS_INSTALL_PREFIX}
             -DBUILD_SHARED_LIBS=ON
+            -DBUILD_WITHOUT_LAPACK=ON
+            -DCMAKE_BUILD_TYPE=Release
+            -DUSE_OPENMP=ON
     )
     set(OpenBLAS_LIBRARIES "${DEPS_INSTALL_PREFIX}/lib/libopenblas${CMAKE_SHARED_LIBRARY_SUFFIX}")
-    set(OpenBLAS_INCLUDE_DIRS "${DEPS_INSTALL_PREFIX}/include")
+    set(OpenBLAS_INCLUDE_DIRS "${DEPS_INSTALL_PREFIX}/include/openblas")
     set(OpenBLAS_FOUND TRUE)
 else()
     message(STATUS "${Green}Found OpenBLAS: ${OpenBLAS_LIBRARIES}${ColorReset}")
@@ -50,6 +60,9 @@ function(build_armadillo)
         PREFIX          ${DEPS_PREFIX}
         CMAKE_ARGS
             -DCMAKE_INSTALL_PREFIX=${DEPS_INSTALL_PREFIX}
+            -DCMAKE_BUILD_TYPE=Release
+            -DBUILD_SMOKE_TEST=OFF
+
         DEPENDS OpenBLAS
     )
     set(ARMADILLO_LIBRARIES "${DEPS_INSTALL_PREFIX}/lib/libarmadillo${CMAKE_SHARED_LIBRARY_SUFFIX}" PARENT_SCOPE)

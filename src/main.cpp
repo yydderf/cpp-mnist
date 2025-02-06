@@ -2,6 +2,7 @@
 #include <vector>
 #include <armadillo>
 #include <cmath>
+#include <cblas.h>
 
 #include "misc.hpp"
 
@@ -154,7 +155,7 @@ Network(std::vector<uint32_t> sizes)
     size_t evaluate(std::span<Data> &testing_data)
     {
         size_t valid = 0;
-        size_t n = testing_data.size();
+        // size_t n = testing_data.size();
         arma::Mat<double> out_mat;
         for (Data data : testing_data) {
             out_mat = this->feedforward(data.image);
@@ -191,11 +192,9 @@ private:
 int main()
 {
     arma::arma_config arma_cfg;
-    if (arma_cfg.blas) {
-        std::cout << "BLAS is Enabled" << std::endl;
-    } else {
-        std::cout << "BLAS is not enabled" << std::endl;
-    }
+    std::cout << (arma_cfg.blas ? "BLAS is Enabled" : "BLAS is NOT Enabled") << std::endl;
+    std::cout << "OpenBLAS procs: " << openblas_get_num_procs() << ", threads: " << openblas_get_num_threads() << std::endl;
+
     std::vector<Data> data;
     std::span<Data> training_data, testing_data;
     DataHandler dh(
@@ -203,7 +202,7 @@ int main()
         "../res/dataset/train-images.idx3-ubyte",
         "../res/dataset/train-labels.idx1-ubyte"
     );
-    dh.split(data, 0.85, training_data, testing_data);
+    dh.split(data, 0.83333, training_data, testing_data);
     // dh.display_mnist(training_data[0].image);
     // dh.display_mnist(testing_data[0].image);
 

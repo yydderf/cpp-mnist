@@ -78,7 +78,7 @@ DataHandler::DataHandler(std::vector<Data> &data, const char *image_filename, co
     // arma::Mat<uint8_t> tmp_image(this->image_size, 1);
     uint8_t tmp_label;
 
-    for (int i = 0; i < this->num_images; ++i) {
+    for (size_t i = 0; i < this->num_images; ++i) {
         data[i].image.set_size(this->image_size, 1);
         data[i].label.zeros(10, 1);
 
@@ -86,7 +86,7 @@ DataHandler::DataHandler(std::vector<Data> &data, const char *image_filename, co
         image_fd.read(reinterpret_cast<char *>(tmp_image), this->image_size);
         label_fd.read(reinterpret_cast<char *>(&(tmp_label)), 1);
 
-        for (int j = 0; j < this->image_size; ++j) {
+        for (size_t j = 0; j < this->image_size; ++j) {
             data[i].image(j, 0) = static_cast<double>(tmp_image[j]) / 255;
             // data[i].image(j, 0) = static_cast<double>(tmp_image[j]);
         }
@@ -104,7 +104,7 @@ DataHandler::DataHandler(std::vector<Data> &data, const char *image_filename, co
  */
 void DataHandler::display_mnist(const arma::Mat<double> &image)
 {
-    for (int i = 0; i < this->image_size; ++i) {
+    for (size_t i = 0; i < this->image_size; ++i) {
         if (i % this->rows == 0) {
             std::cout << std::endl;
         }
@@ -123,7 +123,7 @@ void DataHandler::display_mnist(const arma::Mat<double> &image)
 void DataHandler::split(std::vector<Data> &data, double ratio, std::span<Data> &training_data, std::span<Data> &testing_data)
 {
     uint32_t training_size = std::lround(this->num_images * ratio);
-    uint32_t testing_size = this->num_images - training_size;
+    // uint32_t testing_size = this->num_images - training_size;
 
     std::random_device rd;
     std::mt19937 generator(rd());
