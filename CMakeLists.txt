@@ -48,6 +48,7 @@ if (NOT BLAS_FOUND)
     set(BLAS_LIBRARIES "${DEPS_INSTALL_PREFIX}/lib/libopenblas${CMAKE_SHARED_LIBRARY_SUFFIX}")
     set(BLAS_INCLUDE_DIRS "${DEPS_INSTALL_PREFIX}/include/openblas")
     set(BLAS_FOUND TRUE)
+    set(BLAS_TARGET OpenBLAS)
     add_definitions(-DOPENBLAS_API)
 else()
     find_path(BLAS_INCLUDE_DIRS cblas.h
@@ -55,6 +56,7 @@ else()
         /usr/local/include
         ${BLAS_LIBRARIES}
     )
+    set(BLAS_TARGET BLAS::BLAS)
 endif()
 
 function(build_armadillo)
@@ -69,7 +71,7 @@ function(build_armadillo)
             -DCMAKE_BUILD_TYPE=Release
             -DBUILD_SMOKE_TEST=OFF
 
-        DEPENDS BLAS::BLAS
+        DEPENDS ${BLAS_TARGET}
     )
     set(ARMADILLO_LIBRARIES "${DEPS_INSTALL_PREFIX}/lib/libarmadillo${CMAKE_SHARED_LIBRARY_SUFFIX}" PARENT_SCOPE)
     set(ARMADILLO_INCLUDE_DIRS "${DEPS_INSTALL_PREFIX}/include" PARENT_SCOPE)
